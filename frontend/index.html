@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Телеметрия F1 - Исторические данные гонок Формулы 1</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jura:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/style.css?v=20260623-contrast-tune-1">
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-shell">
+        <div id="content-shell" class="content-shell">
+            <main class="main-grid dashboard-layout">
+                <aside class="dashboard-sidebar">
+                    <article
+                        id="session-overview-card"
+                        class="panel sidebar-card sidebar-overview"
+                    >
+                        <div class="sidebar-title-block">
+                            <h1 class="header-title">ТЕЛЕМЕТРИЯ F1</h1>
+                        </div>
+                    </article>
+
+                    <article class="panel filters-card">
+                        <div class="panel-heading">
+                            <h2>ПАРАМЕТРЫ</h2>
+                        </div>
+                        <div class="filter-stack">
+                            <label class="field">
+                                <span>СЕЗОН</span>
+                                <select id="season-select"></select>
+                            </label>
+                            <label class="field">
+                                <span>ГРАН-ПРИ</span>
+                                <select id="race-select" disabled></select>
+                            </label>
+                            <label class="field">
+                                <span>СЕССИЯ</span>
+                                <select id="session-select" disabled></select>
+                            </label>
+                            <label class="field">
+                                <span>ПИЛОТ</span>
+                                <select id="driver-select" disabled></select>
+                            </label>
+                        </div>
+                    </article>
+
+                    <article
+                        id="laps-card"
+                        class="panel laps-card prompt-lockable"
+                        data-prompt-message=""
+                    >
+                        <div class="panel-heading">
+                            <h2>КРУГИ</h2>
+                        </div>
+                        <div class="laps-table-wrap">
+                            <table class="laps-table">
+                                <thead id="laps-table-head"></thead>
+                                <tbody id="laps-table-body">
+                                    <tr class="laps-empty-row">
+                                        <td colspan="5">Выберите пилота, чтобы загрузить круги.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                </aside>
+
+                <section
+                    id="dashboard-main"
+                    class="dashboard-main prompt-lockable"
+                    data-prompt-message=""
+                >
+                    <div class="dashboard-center-column">
+                        <article class="panel chart-card speed-block dashboard-speed">
+                            <div class="panel-heading">
+                                <h2>СКОРОСТЬ</h2>
+                                <span id="speed-current-value" class="metric-value">--</span>
+                            </div>
+                            <div id="speed-rpm-chart" class="chart chart-large"></div>
+                        </article>
+
+                        <article class="panel chart-card controls-block dashboard-controls">
+                            <div class="panel-heading">
+                                <h2>УПРАВЛЕНИЕ ПИЛОТОМ</h2>
+                                <span id="controls-current-value" class="metric-value">--</span>
+                            </div>
+                            <div id="throttle-brake-chart" class="chart chart-medium"></div>
+                        </article>
+
+                        <article class="panel chart-card rpm-block dashboard-rpm">
+                            <div class="panel-heading">
+                                <h2>ОБОРОТЫ</h2>
+                                <span id="rpm-current-value" class="metric-value">--</span>
+                            </div>
+                            <div id="rpm-chart" class="chart chart-compact"></div>
+                        </article>
+
+                        <article class="panel timeline-card dashboard-timeline">
+                            <div class="panel-heading">
+                                <h2>ВРЕМЯ КРУГА</h2>
+                                <span id="chart-cursor-label">-- с</span>
+                            </div>
+                            <div class="slider-wrap">
+                                <div class="slider-row">
+                                    <label class="time-input-label">
+                                        <span>ВРЕМЯ</span>
+                                        <input id="time-input" type="text" placeholder="0.000" disabled>
+                                    </label>
+                                    <input id="time-slider" type="range" min="0" max="0" step="0.001" value="0" disabled>
+                                    <span id="slider-lap-time" class="lap-time-label">--</span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <aside class="dashboard-right-column">
+                        <article class="panel weather-card dashboard-weather">
+                            <div class="panel-heading">
+                                <h2>ПОГОДНЫЕ УСЛОВИЯ</h2>
+                            </div>
+                            <div class="weather-gauges" aria-label="Погодные условия сессии">
+                                <div class="weather-gauge track">
+                                    <div class="weather-gauge-face">
+                                        <svg class="weather-gauge-ring" viewBox="0 0 100 100" aria-hidden="true">
+                                            <defs>
+                                                <linearGradient id="track-weather-gradient" x1="16" y1="84" x2="84" y2="16">
+                                                    <stop offset="0%" stop-color="#fde047"/>
+                                                    <stop offset="55%" stop-color="#fb923c"/>
+                                                    <stop offset="100%" stop-color="#ef4444"/>
+                                                </linearGradient>
+                                            </defs>
+                                            <circle class="weather-ring-base" cx="50" cy="50" r="38"/>
+                                            <circle class="weather-ring-accent" cx="50" cy="50" r="38" pathLength="100" stroke="url(#track-weather-gradient)" transform="rotate(136 50 50)"/>
+                                        </svg>
+                                        <div class="weather-gauge-center">
+                                            <span class="weather-gauge-glyph" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M7 7.5c-1.1 1.5-1.3 3.3-.5 4.9"/>
+                                                    <path d="M12 6c-1.2 1.8-1.4 4.1-.4 6.1"/>
+                                                    <path d="M17 7.5c-1 1.4-1.2 3.1-.5 4.7"/>
+                                                    <path d="M5.5 18.5h13"/>
+                                                </svg>
+                                            </span>
+                                            <strong class="weather-gauge-value" id="track-temp"><span class="weather-value-number">--</span></strong>
+                                            <span class="weather-gauge-label">ТРАССА</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="weather-gauge air">
+                                    <div class="weather-gauge-face">
+                                        <svg class="weather-gauge-ring" viewBox="0 0 100 100" aria-hidden="true">
+                                            <defs>
+                                                <linearGradient id="air-weather-gradient" x1="16" y1="84" x2="84" y2="16">
+                                                    <stop offset="0%" stop-color="#bef264"/>
+                                                    <stop offset="48%" stop-color="#facc15"/>
+                                                    <stop offset="100%" stop-color="#f43f5e"/>
+                                                </linearGradient>
+                                            </defs>
+                                            <circle class="weather-ring-base" cx="50" cy="50" r="38"/>
+                                            <circle class="weather-ring-accent" cx="50" cy="50" r="38" pathLength="100" stroke="url(#air-weather-gradient)" transform="rotate(136 50 50)"/>
+                                        </svg>
+                                        <div class="weather-gauge-center">
+                                            <span class="weather-gauge-glyph" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M5 14.5c2.4-3.2 5-4.8 7.8-4.8"/>
+                                                    <path d="M7.5 18c1.9-2 4-3 6.4-3"/>
+                                                    <path d="M13.5 9c1.8 0 3.5.7 5 2"/>
+                                                    <circle cx="13.5" cy="9" r="1.4" fill="currentColor" stroke="none"/>
+                                                </svg>
+                                            </span>
+                                            <strong class="weather-gauge-value" id="air-temp"><span class="weather-value-number">--</span></strong>
+                                            <span class="weather-gauge-label">ВОЗДУХ</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="weather-gauge wind">
+                                    <div class="weather-gauge-face">
+                                        <svg class="weather-gauge-ring" viewBox="0 0 100 100" aria-hidden="true">
+                                            <defs>
+                                                <linearGradient id="wind-weather-gradient" x1="16" y1="84" x2="84" y2="16">
+                                                    <stop offset="0%" stop-color="#38bdf8"/>
+                                                    <stop offset="55%" stop-color="#60a5fa"/>
+                                                    <stop offset="100%" stop-color="#818cf8"/>
+                                                </linearGradient>
+                                            </defs>
+                                            <circle class="weather-ring-base" cx="50" cy="50" r="38"/>
+                                            <circle class="weather-ring-accent" cx="50" cy="50" r="38" pathLength="100" stroke="url(#wind-weather-gradient)" transform="rotate(136 50 50)"/>
+                                        </svg>
+                                        <div class="weather-gauge-center">
+                                            <span class="weather-gauge-glyph" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M4.5 10h9c2.2 0 3.5-.9 3.5-2.4 0-1.3-1-2.1-2.4-2.1-1.1 0-2 .4-2.7 1.3"/>
+                                                    <path d="M4 14.5h11.5c1.7 0 2.8.8 2.8 2.2 0 1.2-.9 2.1-2.3 2.1-1 0-1.8-.4-2.3-1.1"/>
+                                                </svg>
+                                            </span>
+                                            <strong class="weather-gauge-value" id="wind-speed"><span class="weather-value-number">--</span></strong>
+                                            <span class="weather-gauge-label">ВЕТЕР</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="panel track-card dashboard-track">
+                            <div class="panel-heading">
+                                <h2>КАРТА ТРАССЫ</h2>
+                            </div>
+                            <div id="track-map" class="track-map"></div>
+                            <div class="track-legend" aria-label="Легенда карты трассы">
+                                <span><i class="track-legend-dot throttle"></i>газ</span>
+                                <span><i class="track-legend-dot brake"></i>тормоз</span>
+                                <span><i class="track-legend-dot neutral"></i>переход</span>
+                            </div>
+                        </article>
+
+                        <article class="panel stats-card dashboard-stats">
+                            <div class="panel-heading">
+                                <h2>СВОДНАЯ СТАТИСТИКА КРУГА</h2>
+                            </div>
+                            <div id="lap-stats" class="stats-grid">
+                                <div class="stat-item">
+                                    <span>ВРЕМЯ КРУГА</span>
+                                    <strong>--</strong>
+                                </div>
+                                <div class="stat-item">
+                                    <span>СРЕДНЯЯ СКОРОСТЬ</span>
+                                    <strong>--</strong>
+                                </div>
+                                <div class="stat-item">
+                                    <span>МАКСИМАЛЬНАЯ СКОРОСТЬ</span>
+                                    <strong>--</strong>
+                                </div>
+                                <div class="stat-item">
+                                    <span>СРЕДНИЕ ОБОРОТЫ</span>
+                                    <strong>--</strong>
+                                </div>
+                                <div class="stat-item">
+                                    <span>СРЕДНИЙ ГАЗ</span>
+                                    <strong>--</strong>
+                                </div>
+                                <div class="stat-item">
+                                    <span>СРЕДНИЙ ТОРМОЗ</span>
+                                    <strong>--</strong>
+                                </div>
+                            </div>
+                        </article>
+                    </aside>
+                </section>
+            </main>
+
+            <footer class="dashboard-footer">
+                <p>Этот сайт не связан с Formula 1, FIA или их дочерними организациями.</p>
+            </footer>
+
+            <div id="loading-overlay" class="loading-overlay" aria-hidden="true">
+                <div class="loading-card" role="status" aria-live="polite" aria-busy="true">
+                    <div id="loading-spinner" class="loading-spinner" aria-hidden="true"></div>
+                    <strong id="loading-label" class="loading-label">Загрузка данных...</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/app.js?v=20260623-lap-status-fix-1"></script>
+</body>
+</html>

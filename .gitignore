@@ -1,0 +1,49 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# IDE / OS
+.idea/
+.vscode/
+desktop.ini
+
+# Local data and caches
+.fastf1_cache/
+.pgdata/
+.pgdata17/
+telemetry.db
+.pg-init-password.txt
+
+# Logs
+*.log
+server.out.log
+server.err.log
+pg_runtime.log
+
+# Temporary and generated folders
+tmp/
+tmp_ref_pptx/
+tmp_uvicorn.out.log
+tmp_uvicorn.err.log
+qa_doc_render/
+review_vkr_current/
+review_vkr_docx_unzipped/
+_review_vkr_doc/
+.codex-logs/
+
+# Thesis and review artifacts
+*.docx
+*.pdf
+review_*.txt
+review_*.docx
+review_*.zip
+preprezentatsia_1.zip
+methodichka_as_text.txt
+_diplom*.txt
+_diploma*.txt
+11
+~$*.docx
+build_defense_qa_doc.py
+extra_defense_questions.json
