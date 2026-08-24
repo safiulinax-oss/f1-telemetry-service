@@ -192,9 +192,3 @@ uvicorn backend.main:app --reload
 - Creating frontend visualizations with JavaScript and Plotly.js
 - Running a local service with Docker Compose and Swagger / OpenAPI
 
-## Notes
-
-- This is an educational diploma project.
-- Real-time telemetry is not included.
-- CORS is open for local development and demonstration.
-- Multi-driver comparison, lap comparison, delta time and strategy analysis are not included yet.
