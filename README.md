@@ -27,19 +27,7 @@ Tools:
 
 ## Screenshots
 
-Screenshots can be added to the `screenshots/` folder.
-
-Recommended screenshots:
-- main dashboard
-- telemetry charts
-- track map
-- Swagger API documentation at `/docs`
-
-Example:
-
-```md
 ![Dashboard](screenshots/dashboard.png)
-```
 
 ## Features
 
