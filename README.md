@@ -1,6 +1,8 @@
-# Web service for access and visualization of historical racing telemetry data
+# Formula 1 Telemetry Dashboard
 
-This diploma project is an educational full-stack web service for browsing historical Formula-style racing telemetry. The system lets a user select a season, grand prix, session, driver and lap, then view telemetry visualizations, a colored track overlay and computed lap statistics in a modern dashboard.
+Educational full-stack web service for browsing and visualizing historical Formula-style racing telemetry.
+
+The application lets a user select a season, grand prix, session, driver and lap, then view telemetry charts, a track map overlay and computed lap statistics in a dashboard interface.
 
 ## Technology stack
 
@@ -10,12 +12,47 @@ Backend:
 - SQLAlchemy
 - PostgreSQL
 - Pydantic
+- FastF1
 
 Frontend:
 - HTML
 - CSS
 - JavaScript
 - Plotly.js
+
+Tools:
+- Git / GitHub
+- Docker Compose
+- Swagger / OpenAPI
+
+## Screenshots
+
+Screenshots can be added to the `screenshots/` folder.
+
+Recommended screenshots:
+- main dashboard
+- telemetry charts
+- track map
+- Swagger API documentation at `/docs`
+
+Example:
+
+```md
+![Dashboard](screenshots/dashboard.png)
+```
+
+## Features
+
+- Hierarchical navigation: season -> grand prix -> session -> driver -> lap
+- Historical racing telemetry visualization
+- Speed and RPM charts
+- Throttle and brake chart
+- Time slider with synchronized cursor marker
+- Track map overlay colored by acceleration, coasting and braking
+- Lap summary statistics computed from telemetry
+- REST API with Swagger / OpenAPI documentation
+- PostgreSQL database with SQLAlchemy models
+- Local PostgreSQL startup through Docker Compose
 
 ## Project structure
 
@@ -29,6 +66,7 @@ telemetry_service/
 │   ├── schemas.py
 │   ├── crud.py
 │   ├── seed_data.py
+│   ├── update_data.py
 │   └── routers/
 │       ├── seasons.py
 │       ├── races.py
@@ -45,17 +83,6 @@ telemetry_service/
 └── README.md
 ```
 
-## Features
-
-- Hierarchical telemetry navigation: season -> grand prix -> session -> driver -> lap
-- Historical telemetry visualization only
-- Speed and RPM chart
-- Throttle and brake chart
-- Time slider with synchronized cursor marker
-- Track map overlay colored by acceleration, coasting and braking
-- Lap summary statistics computed from telemetry
-- Full synthetic 2023 season dataset
-
 ## Database entities
 
 - `Season`
@@ -69,25 +96,26 @@ The schema supports multiple seasons, races, sessions, drivers and laps.
 
 ## API endpoints
 
+- `GET /health`
 - `GET /seasons`
 - `GET /races?season_id=`
 - `GET /sessions?race_id=`
+- `GET /session-detail?session_id=`
 - `GET /drivers?session_id=`
 - `GET /laps?session_id=&driver_id=`
 - `GET /telemetry?lap_id=`
+- `GET /lap-detail?lap_id=`
 - `GET /lap-summary?lap_id=`
+- `POST /session-metadata-warmup?session_id=`
+- `POST /session-telemetry-warmup?session_id=`
 
-## Demonstration seed data
+## Data source and demo data
 
-The seed script rebuilds the active PostgreSQL database with a full synthetic Formula-style 2023 season:
+The seed script rebuilds the active PostgreSQL database and imports available historical racing seasons through FastF1.
 
-- Season: `2023`
-- Grand Prix weekends: `22`
-- Sessions per weekend: `Practice`, `Qualifying`, `Race`
-- Drivers: all race-weekend lineups for the season, including AlphaTauri substitutions
-- Laps: full lap lists for every seeded driver in every seeded session
+By default, `backend.seed_data` detects supported seasons starting from 2018 and imports completed events. Session metadata and lap telemetry are loaded and cached when needed, so the project can start with season and event data and hydrate detailed telemetry during use.
 
-Telemetry is generated on demand for the selected lap instead of being precomputed for the whole database. Each requested lap produces approximately `1000` telemetry points using a deterministic profile tuned to the selected circuit style.
+Telemetry points for a selected lap are loaded from FastF1 when available. If live telemetry cannot be loaded, the application falls back to generated demo telemetry so the dashboard remains usable for educational demonstration.
 
 ## Setup instructions
 
@@ -106,15 +134,25 @@ py -3 -m venv .venv
 py -3 -m pip install -r requirements.txt
 ```
 
-### 3. Configure the database connection
+### 3. Configure environment variables
 
-Copy `.env.example` to `.env` and adjust the values if needed:
+Copy `.env.example` to `.env`:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-PostgreSQL is required. Configure either `DATABASE_URL` or the `POSTGRES_*` variables before starting the application.
+Default local values:
+
+```env
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=telemetry_service
+POSTGRES_USER=telemetry
+POSTGRES_PASSWORD=telemetry
+```
+
+You can also configure the database with `DATABASE_URL`.
 
 ### 4. Start PostgreSQL
 
@@ -124,21 +162,21 @@ Recommended local option:
 docker compose up -d postgres
 ```
 
-### 5. Create tables and insert demo data
+### 5. Create tables and seed demo data
 
-The seed script rebuilds the active PostgreSQL database and inserts the full synthetic 2023 season.
+The seed script rebuilds the active PostgreSQL database.
 
 ```powershell
 py -3 -m backend.seed_data
 ```
 
-If you need to refresh the project with newly completed real race weekends without wiping the database, run:
+To refresh the project with newly completed race weekends without wiping the database:
 
 ```powershell
 py -3 -m backend.update_data
 ```
 
-To only add missing seasons/races/sessions and skip driver/lap hydration, run:
+To only add missing seasons, races and sessions:
 
 ```powershell
 py -3 -m backend.update_data --skip-hydration
@@ -146,29 +184,29 @@ py -3 -m backend.update_data --skip-hydration
 
 ### 6. Start the FastAPI server
 
+Run the command from the project root:
+
 ```powershell
 uvicorn backend.main:app --reload
 ```
 
-Start the server from the `telemetry_service` directory.
-
 ### 7. Open the dashboard
 
-Open the application in your browser:
+- Dashboard: `http://127.0.0.1:8000/`
+- Swagger / OpenAPI docs: `http://127.0.0.1:8000/docs`
 
-- `http://127.0.0.1:8000/`
-- `http://127.0.0.1:8000/docs`
+## What I practiced in this project
 
-## Frontend behavior
-
-When the page loads:
-
-1. Seasons are loaded from the backend.
-2. The selection chain continues through races, sessions, drivers and laps.
-3. After a lap is selected, the dashboard renders speed/RPM charts, throttle/brake charts, a colored track map overlay and lap summary statistics.
+- Designing SQLAlchemy models and relationships for a relational database
+- Working with PostgreSQL configuration through environment variables
+- Building REST API endpoints with FastAPI
+- Loading, processing and caching telemetry data
+- Creating frontend visualizations with JavaScript and Plotly.js
+- Running a local service with Docker Compose and Swagger / OpenAPI
 
 ## Notes
 
-- This project is intentionally educational and keeps the architecture simple.
+- This is an educational diploma project.
 - Real-time telemetry is not included.
-- Multi-driver comparison, lap comparison, delta time and strategy analysis are not included.
+- CORS is open for local development and demonstration.
+- Multi-driver comparison, lap comparison, delta time and strategy analysis are not included yet.
